@@ -9,6 +9,8 @@ import java.sql.Statement
 data class City(val name: String, val population: Int)
 class CityService(private val connection: Connection) {
     companion object {
+        private const val SELECT_ALL_CITIES = "SELECT name, population FROM cities;"
+
         private const val CREATE_TABLE_CITIES =
             "CREATE TABLE CITIES (ID SERIAL PRIMARY KEY, NAME VARCHAR(255), POPULATION INT);"
         private const val SELECT_CITY_BY_ID = "SELECT name, population FROM cities WHERE id = ?"
@@ -18,10 +20,10 @@ class CityService(private val connection: Connection) {
 
     }
 
-    init {
-        val statement = connection.createStatement()
-        statement.executeUpdate(CREATE_TABLE_CITIES)
-    }
+//    init {
+//        val statement = connection.createStatement()
+//        statement.executeUpdate(CREATE_TABLE_CITIES)
+//    }
 
     private var newCityId = 0
 
@@ -39,6 +41,24 @@ class CityService(private val connection: Connection) {
             throw Exception("Unable to retrieve the id of the newly inserted city")
         }
     }
+
+    // Read all cities
+    suspend fun readAll(): List<City> = withContext(Dispatchers.IO) {
+
+        val statement = connection.prepareStatement(SELECT_ALL_CITIES)
+        val resultSet = statement.executeQuery()
+
+        val cities = mutableListOf<City>()
+
+        while (resultSet.next()) {
+            val name = resultSet.getString("name")
+            val population = resultSet.getInt("population")
+            cities.add(City(name, population))
+        }
+
+        return@withContext cities
+    }
+
 
     // Read a city
     suspend fun read(id: Int): City = withContext(Dispatchers.IO) {

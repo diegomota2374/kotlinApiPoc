@@ -20,6 +20,17 @@ fun Application.configureDatabases() {
             val id = cityService.create(city)
             call.respond(HttpStatusCode.Created, id)
         }
+
+        // Read all cities
+        get("/cities") {
+            try {
+                val cities = cityService.readAll()
+
+                call.respond(HttpStatusCode.OK, cities)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, "Erro ao buscar cidades")
+            }
+        }
     
         // Read city
         get("/cities/{id}") {
